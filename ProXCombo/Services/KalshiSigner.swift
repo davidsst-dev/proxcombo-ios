@@ -37,10 +37,10 @@ enum KalshiSigner {
             kSecAttrKeyType: kSecAttrKeyTypeRSA,
             kSecAttrKeyClass: kSecAttrKeyClassPrivate
         ]
-        // kSecFormatDER maneja la llave DER (PKCS#1 y PKCS#8); kSecFormatOpenSSL como respaldo.
-        for format in [kSecFormatDER, kSecFormatOpenSSL] {
+        // kSecFormatOpenSSL maneja la llave (PKCS#1 y PKCS#8); kSecFormatDER como respaldo.
+        for format in [kSecFormatOpenSSL, kSecFormatDER] {
             var importError: Unmanaged<CFError>?
-            if let items = SecItemImport(
+            let items = SecItemImport(
                 format,
                 kSecItemTypeKey,
                 [],
@@ -48,7 +48,8 @@ enum KalshiSigner {
                 [],
                 attributes as CFDictionary,
                 &importError
-            ) as? [SecKey], let key = items.first {
+            )
+            if let keys = items as? [SecKey], let key = keys.first {
                 return key
             }
         }
@@ -56,18 +57,18 @@ enum KalshiSigner {
     }
 
     /// Firma `message` con SHA256withRSA/PSS y devuelve Base64 sin saltos de línea.
+    ///
+    /// `.kSecKeyAlgorithmRSASignaturePSSSHA256` con opciones por defecto produce
+    /// exactamente PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1):
+    /// digest SHA-256, MGF1-SHA256 y longitud de salt = 32. Equivalente al
+    /// "SHA256withRSA/PSS" de Android.
     static func sign(key: SecKey, message: String) throws -> String {
         let messageData = Data(message.utf8)
-        let options: [SecKeyAlgorithm: Any] = [
-            .rsaPSSDigestLength: 32,
-            .rsaPSSSaltLength: 32,
-            .rsaPSSMGF1Hash: SecKeyHashAlgorithm.sha256
-        ]
         guard let signature = SecKeyCreateSignature(
             key,
-            .rsaSignatureSchemePSS,
+            .kSecKeyAlgorithmRSASignaturePSSSHA256,
             messageData as CFData,
-            options as CFDictionary
+            [:] as CFDictionary
         ) else {
             throw KalshiError.signingFailed
         }
