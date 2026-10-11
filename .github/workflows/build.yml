@@ -1,0 +1,58 @@
+# Compila ProXCombo para iPhone en un runner macOS de GitHub (gratis en repos públicos).
+# El resultado es un .ipa SIN firmar: Sideloadly/AltStore lo re-firman con tu
+# cuenta de Apple gratuita al instalarlo en el iPhone.
+name: Build ProXCombo iOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar XcodeGen
+        run: |
+          brew install xcodegen || brew upgrade xcodegen
+
+      - name: Generar proyecto Xcode
+        run: xcodegen generate
+
+      - name: Compilar para iPhone (sin firma)
+        run: |
+          xcodebuild build \
+            -project ProXCombo.xcodeproj \
+            -scheme ProXCombo \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY=- \
+            PROVISIONING_PROFILE_SPECIFIER=''
+
+      - name: Empaquetar .ipa
+        run: |
+          set -e
+          APP=$(find "$HOME/Library/Developer/Xcode/DerivedData" -type d -name "ProXCombo.app" -path "*Release-iphoneos*" | head -1)
+          if [ -z "$APP" ]; then
+            echo "ERROR: no se encontró ProXCombo.app"
+            exit 1
+          fi
+          echo "App encontrada: $APP"
+          mkdir -p ipa/Payload
+          cp -R "$APP" ipa/Payload/
+          cd ipa
+          zip -rq ../ProXCombo.ipa Payload
+          cd ..
+          ls -la ProXCombo.ipa
+
+      - name: Subir .ipa como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProXCombo
+          path: ProXCombo.ipa
+          retention-days: 30
