@@ -10,7 +10,7 @@ struct BiometricGate<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var locked = true
     @State private var authMessage: String?
-    private var lastBackground: Date?
+    @State private var lastBackground: Date?
 
     init(@ViewBuilder content: @escaping () -> Content) {
         self.content = content
