@@ -48,7 +48,7 @@ struct SettingsView: View {
                 }
             }
 
-            // Konfiguración
+            // Configuración
             Section("Configuración") {
                 Picker("Base URL de Kalshi", selection: $baseUrl) {
                     ForEach(SettingsStore.baseURLOptions, id: \.self) { option in
@@ -172,8 +172,8 @@ struct SettingsView: View {
         if !keyId.isEmpty && !pem.isEmpty {
             do {
                 try SecureStorage.save(keyId: keyId, pem: pem)
-            } catch {
-                error = error.localizedDescription
+            } catch let saveError {
+                error = saveError.localizedDescription
                 return
             }
         }
