@@ -70,6 +70,10 @@ enum KalshiSigner {
         let data: [UInt8]
         var pos = 0
 
+        init(_ data: [UInt8]) {
+            self.data = data
+        }
+
         var isAtEnd: Bool { pos >= data.count }
 
         /// Lee un TLV completo: (tag, valor). Devuelve nil si el DER está mal formado.
@@ -498,7 +502,7 @@ enum KalshiSigner {
                 }
             }
             if bytes.count > length {
-                bytes = Array(bytes[bytes.count - length...])
+                bytes = Array(bytes.suffix(length))
             } else if bytes.count < length {
                 bytes = Array(repeating: 0, count: length - bytes.count) + bytes
             }
