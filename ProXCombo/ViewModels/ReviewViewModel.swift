@@ -120,8 +120,10 @@ final class ReviewViewModel: ObservableObject {
     static func resolveLeg(_ leg: LegCode, _ market: Market) -> ResolvedLeg {
         let price = market.askPrice(for: leg.side)
         let advantage = Advantage.legPoints(prob: leg.prob, price: price)
-        let inactive = (market.status != nil && market.status != "active") ||
-            (parseIso(market.occurrence_datetime)?.isBefore(Date()) == true)
+        var inactive = (market.status != nil && market.status != "active")
+        if let d = parseIso(market.occurrence_datetime), d < Date() {
+            inactive = true
+        }
         let moved = Advantage.priceMoved(prob: leg.prob, price: price)
         return ResolvedLeg(
             leg: leg, market: market, price: price, advantagePoints: advantage,
@@ -187,12 +189,12 @@ final class ReviewViewModel: ObservableObject {
                     guard let market = rl.market else { throw KalshiError.network }
                     let eventTicker = market.event_ticker.isEmpty ? rl.leg.eventTicker : market.event_ticker
                     let url = ComboUrl.legUrl(ticker: rl.leg.ticker, eventTicker: eventTicker)
-                    try await finish(url: url, realPrice: nil)
+                    await finish(url: url, realPrice: nil)
                     return
                 }
                 // Caché de combinadas creadas (24 h).
                 if let cached = services.cache.get(legs: legsCode) {
-                    try await finish(url: cached, realPrice: nil)
+                    await finish(url: cached, realPrice: nil)
                     return
                 }
                 guard let credentials = SecureStorage.load() else {
@@ -221,7 +223,7 @@ final class ReviewViewModel: ObservableObject {
                 let url = ComboUrl.comboUrl(eventTicker: eventTicker, marketTicker: marketTicker)
                 let realPrice = response.market?.yes_ask_dollars.flatMap { Double($0) }
                     .flatMap { $0 > 0.0 && $0 < 1.0 ? $0 : nil }
-                try await finish(url: url, realPrice: realPrice)
+                await finish(url: url, realPrice: realPrice)
             } catch {
                 creating = false
                 createError = error.localizedDescription
