@@ -42,6 +42,8 @@
 	</array>
 	<key>UIBackgroundModes</key>
 	<array/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>ProX Combo usa Face ID / Touch ID para proteger tus credenciales de Kalshi y bloquear la sesión.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
