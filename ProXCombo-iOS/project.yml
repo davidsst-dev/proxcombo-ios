@@ -1,0 +1,33 @@
+# Especificación de XcodeGen: genera ProXCombo.xcodeproj en la CI (macOS).
+# No hay que crear el proyecto a mano en Xcode; basta con:
+#   brew install xcodegen && xcodegen generate
+name: ProXCombo
+options:
+  bundleIdPrefix: com.proxcombo
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+targets:
+  ProXCombo:
+    type: application
+    platform: iOS
+    sources:
+      - path: ProXCombo
+        excludes:
+          - "Info.plist"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.proxcombo.ios
+        PRODUCT_NAME: ProXCombo
+        MARKETING_VERSION: "2.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_FILE: ProXCombo/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_PREVIEWS: YES
